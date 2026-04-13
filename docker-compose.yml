@@ -43,6 +43,12 @@ services:
       - traefik.http.routers.wordpress.entrypoints=web
       - traefik.http.services.wordpress.loadbalancer.server.port=80
     command: sh -c 'while ! mysqladmin ping -hdb --silent; do sleep 1; done; wordpress-entrypoint.sh apache2-foreground'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/wp-admin/install.php || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
 networks:
   dokploy-network:
