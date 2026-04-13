@@ -3,40 +3,48 @@ version: "3.8"
 services:
   db:
     image: mysql:5.7
-    command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wpuser
       MYSQL_PASSWORD: wp123
+    networks:
+      dokploy-network:
+        aliases:
+          - db
     volumes:
       - db_data:/var/lib/mysql
-    networks:
-      - dokploy-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   wordpress:
     image: wordpress:latest
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wpuser
       WORDPRESS_DB_PASSWORD: wp123
       WORDPRESS_DB_NAME: wordpress
-    command: bash -c "sleep 20 && docker-entrypoint.sh apache2-foreground"
     networks:
-      - dokploy-network
+      dokploy-network:
+        aliases:
+          - wordpress
     labels:
       - traefik.enable=true
       - traefik.http.routers.wordpress.rule=Host(`tour360.braviaglobal.com.br`)
       - traefik.http.routers.wordpress.entrypoints=web
       - traefik.http.services.wordpress.loadbalancer.server.port=80
 
-volumes:
-  db_data:
-
 networks:
   dokploy-network:
     external: true
+
+volumes:
+  db_data:
