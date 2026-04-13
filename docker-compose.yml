@@ -38,13 +38,6 @@ services:
       - traefik.http.routers.wordpress.rule=Host(`tour360.braviaglobal.com.br` )
       - traefik.http.routers.wordpress.entrypoints=web
       - traefik.http.services.wordpress.loadbalancer.server.port=80
-    command: sh -c 'until mysqladmin ping -h db --silent; do echo "waiting for db"; sleep 2; done; wordpress-entrypoint.sh apache2-foreground'
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/wp-admin/install.php || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
 
 volumes:
   db_data:
